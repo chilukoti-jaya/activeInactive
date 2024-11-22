@@ -1,0 +1,52 @@
+import pandas as pd
+
+def filter_employees_with_mixed_status(df):
+    """
+    Filter employees who have both:
+    - At least one status 'a' record
+    - At least one record with a different status
+    Handles multiple login records per employee and duplicate statuses
+    
+    Parameters:
+    df (pandas.DataFrame): DataFrame with columns 'loginId', 'empid', and 'status'
+    
+    Returns:
+    pandas.DataFrame: Filtered DataFrame containing all records for matching employees
+    """
+    # Find employees who have at least one 'a' status
+    emp_with_a = set(df[df['status'] == 'a']['empid'])
+    
+    # Find employees who have at least one non-'a' status
+    emp_with_other = set(df[df['status'] != 'a']['empid'])
+    
+    # Find employees who have both conditions
+    target_emps = emp_with_a.intersection(emp_with_other)
+    
+    # Filter the original dataframe to get all records for these employees
+    result = df[df['empid'].isin(target_emps)]
+    
+    return result
+
+# Example usage
+if __name__ == "__main__":
+    # Sample data with multiple logins and duplicate statuses
+    data = {
+        'loginId': ['log1', 'log2', 'log3', 'log4', 'log5', 'log6', 'log7', 'log8', 'log9'],
+        'empid':   ['emp1', 'emp1', 'emp1', 'emp1', 'emp2', 'emp2', 'emp3', 'emp3', 'emp4'],
+        'status':  ['a',    'a',    'i',    't',    'i',    'l',    'a',    'a',    'i']
+    }
+    df = pd.DataFrame(data)
+    
+    # Apply the filter
+    filtered_df = filter_employees_with_mixed_status(df)
+    
+    print("\nOriginal DataFrame:")
+    print(df)
+    print("\nFiltered DataFrame (Employees with both 'a' and other statuses):")
+    print(filtered_df)
+    
+    # Optional: Show summary of statuses per employee
+    print("\nStatus Summary per Employee:")
+    summary = filtered_df.groupby('empid')['status'].agg(['count', lambda x: list(x)])
+    summary.columns = ['Total Records', 'Status List']
+    print(summary)
